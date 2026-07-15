@@ -1,0 +1,15 @@
+# 复制为 .mewcode/config.yaml，再把占位值替换为真实配置。
+# config.yaml 已被 Git 忽略，请勿把真实密钥提交到仓库。
+providers:
+  - name: Claude
+    protocol: anthropic
+    api_key: sk-ant-replace-me
+    model: claude-sonnet-4-6
+    thinking: false
+
+  - name: OpenAI Compatible
+    protocol: openai
+    api_key: sk-replace-me
+    model: your-model-name
+    # 官方 OpenAI 可删除 base_url；兼容服务填写其 OpenAI API 根地址。
+    base_url: https://api.openai.com/v1
