@@ -396,7 +396,7 @@ async def _run_prompt(
             conv.add_system_reminder(note)
         # 后续 team 轮询仍用 run_to_completion，避免重复事件循环
         last_result = await agent.run_to_completion(
-            "Teammate notifications received. Process them and continue.", conv
+            "已收到协作 Agent 的通知。请处理这些通知并继续任务，使用简体中文回复用户。", conv
         )
         if is_json:
             emit_json({"type": "assistant", "text": last_result})

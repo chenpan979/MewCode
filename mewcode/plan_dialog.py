@@ -16,9 +16,9 @@ class PlanChoice(str, Enum):
 
 
 _OPTIONS = [
-    ("Yes, enter YOLO mode (auto-approve all)", PlanChoice.YOLO),
-    ("Yes, manually approve edits", PlanChoice.MANUAL),
-    ("Tell MewCode what to change", PlanChoice.FEEDBACK),
+    ("执行计划，并自动批准所有操作", PlanChoice.YOLO),
+    ("执行计划，但逐项确认编辑", PlanChoice.MANUAL),
+    ("告诉 MewCode 需要修改计划的内容", PlanChoice.FEEDBACK),
 ]
 
 
@@ -26,11 +26,11 @@ class InlinePlanWidget(Vertical, can_focus=True):
     """内联的计划审批组件，格式与 Go 版 TUI 保持一致。"""
 
     BINDINGS = [
-        Binding("up", "cursor_up", "Up", priority=True),
-        Binding("down", "cursor_down", "Down", priority=True),
-        Binding("enter", "select", "Select", priority=True),
-        Binding("escape", "cancel", "Cancel", priority=True),
-        Binding("shift+tab", "approve_with_feedback", "Approve+Feedback", priority=True),
+        Binding("up", "cursor_up", "上移", priority=True),
+        Binding("down", "cursor_down", "下移", priority=True),
+        Binding("enter", "select", "选择", priority=True),
+        Binding("escape", "cancel", "取消", priority=True),
+        Binding("shift+tab", "approve_with_feedback", "提交反馈", priority=True),
     ]
 
     class Responded(Message):
@@ -55,8 +55,7 @@ class InlinePlanWidget(Vertical, can_focus=True):
 
     def _build_content(self) -> str:
         lines = [
-            "\n [bold #875fff]MewCode has written up a plan and is ready to execute. "
-            "Would you like to proceed?[/bold #875fff]\n"
+            "\n [bold #875fff]MewCode 已制定好计划，是否开始执行？[/bold #875fff]\n"
         ]
         for i, (label, _choice) in enumerate(_OPTIONS):
             if i == self._cursor:
@@ -65,9 +64,9 @@ class InlinePlanWidget(Vertical, can_focus=True):
                 lines.append(f"   {i + 1}. [dim]{label}[/dim]")
 
         if self._cursor == 2:
-            display = self._input if self._input else "[dim]Type feedback here...[/dim]"
+            display = self._input if self._input else "[dim]在此输入修改意见...[/dim]"
             lines.append(f"      {display}█")
-            lines.append("      [dim]shift+tab to approve with this feedback[/dim]")
+            lines.append("      [dim]按 Shift+Tab 提交这条修改意见[/dim]")
 
         return "\n".join(lines)
 

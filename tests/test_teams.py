@@ -555,11 +555,13 @@ class TestAgentCoordinatorIntegration:
         # 验证 identity section 内容包含在 prompt 中
         assert "MewCode" in prompt
         assert IDENTITY_SECTION.content[:30] in prompt
+        assert "默认使用简体中文" in prompt
 
     def test_coordinator_prompt(self):
         from mewcode.prompts import build_system_prompt
         prompt = build_system_prompt(coordinator_mode=True)
         assert "coordinator" in prompt.lower()
+        assert "始终使用简体中文" in prompt
 
     def test_coordinator_mode_overrides_normal(self):
         from mewcode.prompts import build_system_prompt

@@ -10,9 +10,9 @@ from mewcode.agent import PermissionResponse
 
 
 _PERM_OPTIONS = [
-    ("Yes", PermissionResponse.ALLOW),
-    ("Yes, and don't ask again for this pattern", PermissionResponse.ALLOW_ALWAYS),
-    ("No", PermissionResponse.DENY),
+    ("允许", PermissionResponse.ALLOW),
+    ("允许，并且不再询问同类操作", PermissionResponse.ALLOW_ALWAYS),
+    ("拒绝", PermissionResponse.DENY),
 ]
 
 
@@ -24,10 +24,10 @@ class InlinePermissionWidget(Vertical, can_focus=True):
     """
 
     BINDINGS = [
-        Binding("up", "cursor_up", "Up", priority=True),
-        Binding("down", "cursor_down", "Down", priority=True),
-        Binding("enter", "select", "Select", priority=True),
-        Binding("escape", "deny", "Deny", priority=True),
+        Binding("up", "cursor_up", "上移", priority=True),
+        Binding("down", "cursor_down", "下移", priority=True),
+        Binding("enter", "select", "选择", priority=True),
+        Binding("escape", "deny", "拒绝", priority=True),
     ]
 
     class Responded(Message):
@@ -52,10 +52,10 @@ class InlinePermissionWidget(Vertical, can_focus=True):
 
     def _build_content(self) -> str:
         lines = []
-        lines.append(f"\n  [bold yellow]{self._tool_name} command[/bold yellow]\n")
+        lines.append(f"\n  [bold yellow]{self._tool_name} 操作[/bold yellow]\n")
         lines.append(f"    {self._description}\n")
-        lines.append("  [dim]This command requires approval[/dim]\n")
-        lines.append("  Do you want to proceed?\n")
+        lines.append("  [dim]此操作需要你的授权[/dim]\n")
+        lines.append("  是否继续？\n")
 
         for i, (label, _resp) in enumerate(_PERM_OPTIONS):
             if i == self._cursor:
