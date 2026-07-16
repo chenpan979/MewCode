@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import random
+import sys
 import time as _time
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,7 @@ from typing import Any
 from rich.markup import escape
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Center, Horizontal, Middle, Vertical, VerticalScroll
 from textual.message import Message as TMessage
 from textual.widgets import Markdown, OptionList, Static, TextArea
 from textual.widgets.option_list import Option
@@ -121,6 +122,15 @@ def scan_files_for_at(prefix: str, work_dir: str, limit: int = 10) -> list[str]:
     return matches
 
 
+def _set_windows_native_cursor(app: Any, visible: bool) -> None:
+    """Show the real terminal caret so Windows IME can anchor composition UI."""
+    driver = getattr(app, "_driver", None)
+    if driver is None:
+        return
+    driver.write("\x1b[?25h" if visible else "\x1b[?25l")
+    driver.flush()
+
+
 def expand_at_refs(text: str, work_dir: str) -> str:
     def _replace(m: re.Match) -> str:
         rel_path = m.group(1)
@@ -137,13 +147,13 @@ def expand_at_refs(text: str, work_dir: str) -> str:
 
 class ChatInput(TextArea):
     BINDINGS = [
-        Binding("enter", "submit", "Submit", priority=True),
-        Binding("shift+enter", "newline", "Newline", priority=True),
-        Binding("ctrl+j", "newline", "Newline", priority=True),
-        Binding("tab", "complete", "Complete", priority=True),
-        Binding("escape", "dismiss_popup", "Dismiss", priority=True),
-        Binding("up", "nav_up", "Navigate up", priority=True),
-        Binding("down", "nav_down", "Navigate down", priority=True),
+        Binding("enter", "submit", "发送", priority=True),
+        Binding("shift+enter", "newline", "换行", priority=True),
+        Binding("ctrl+j", "newline", "换行", priority=True),
+        Binding("tab", "complete", "补全", priority=True),
+        Binding("escape", "dismiss_popup", "关闭补全", priority=True),
+        Binding("up", "nav_up", "上一条", priority=True),
+        Binding("down", "nav_down", "下一条", priority=True),
     ]
 
     class Submitted(TMessage):
@@ -159,6 +169,8 @@ class ChatInput(TextArea):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.cursor_blink = False
+        if sys.platform == "win32":
+            self.show_cursor = False
         self._history: list[str] = []
         self._history_index: int = -1
         self._history_draft: str = ""
@@ -213,6 +225,15 @@ class ChatInput(TextArea):
 
     def action_newline(self) -> None:
         self.insert("\n")
+
+    def _watch_has_focus(self, focus: bool) -> None:
+        super()._watch_has_focus(focus)
+        if not self.is_mounted or sys.platform != "win32":
+            return
+        app = self.app
+        if app.is_headless:
+            return
+        _set_windows_native_cursor(app, focus)
 
     def action_complete(self) -> None:
         popup = self._popup()
@@ -445,48 +466,17 @@ _MODE_COLORS = {
 SPINNER_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
 
-def _to_past_tense(verb: str) -> str:
-    """把现在进行时动词转换为过去式。"""
-    if verb.endswith("ing"):
-        stem = verb[:-3]
-        if stem.endswith("e"):
-            return stem + "d"
-        if stem and stem[-1] in "atutitet":
-            return stem + "ed"
-        return stem + "ed"
-    return verb + "ed"
-
-
 THINKING_VERBS = [
-    "Accomplishing", "Architecting", "Baking", "Beboppin'", "Befuddling",
-    "Bloviating", "Boogieing", "Boondoggling", "Bootstrapping", "Brewing",
-    "Calculating", "Canoodling", "Caramelizing", "Cascading", "Cerebrating",
-    "Choreographing", "Churning", "Coalescing", "Cogitating", "Combobulating",
-    "Composing", "Computing", "Concocting", "Considering", "Contemplating",
-    "Cooking", "Crafting", "Creating", "Crunching", "Crystallizing",
-    "Cultivating", "Deciphering", "Deliberating", "Dilly-dallying",
-    "Discombobulating", "Doodling", "Elucidating", "Enchanting", "Envisioning",
-    "Fermenting", "Finagling", "Flambéing", "Flibbertigibbeting", "Flummoxing",
-    "Forging", "Frolicking", "Gallivanting", "Garnishing", "Generating",
-    "Germinating", "Grooving", "Harmonizing", "Hatching", "Honking",
-    "Hullaballooing", "Ideating", "Imagining", "Improvising", "Incubating",
-    "Inferring", "Infusing", "Kneading", "Lollygagging", "Manifesting",
-    "Marinating", "Meandering", "Metamorphosing", "Mewing", "Moonwalking",
-    "Moseying", "Mulling", "Musing", "Noodling", "Orbiting",
-    "Orchestrating", "Percolating", "Philosophising", "Pondering",
-    "Pontificating", "Pouncing", "Purring", "Puzzling", "Razzle-dazzling",
-    "Ruminating", "Scampering", "Simmering", "Sketching", "Spelunking",
-    "Spinning", "Sprouting", "Synthesizing", "Thinking", "Tinkering",
-    "Transfiguring", "Transmuting", "Undulating", "Unfurling", "Unravelling",
-    "Vibing", "Wandering", "Whisking", "Working", "Wrangling", "Zigzagging",
-]  # 共 105 个动词，与 Go 版 internal/tui/verbs.go 完全一致
-
+    "正在思考", "正在分析", "正在规划", "正在检查", "正在搜索",
+    "正在推理", "正在整理", "正在计算", "正在编写", "正在验证",
+    "正在调试", "正在重构", "正在探索", "正在综合", "正在处理",
+]
 
 class ToolGroupSummary(Static, can_focus=True):
 
 
     def __init__(self, count: int, total_elapsed: float, **kwargs: Any) -> None:
-        label = f"● Done ({count} tool uses · {total_elapsed:.1f}s)  (ctrl+o to expand)"
+        label = f"● 已完成（{count} 次工具调用 · {total_elapsed:.1f} 秒）  (Ctrl+O 展开)"
         super().__init__(label, **kwargs)
         self._count = count
         self._total = total_elapsed
@@ -580,10 +570,10 @@ class MewCodeApp(App):
     INLINE_PADDING = 0
     theme = "mewcode"
     BINDINGS = [
-        Binding("ctrl+c", "handle_ctrl_c", "Quit", priority=True),
-        Binding("escape", "cancel", "Cancel", priority=True),
-        Binding("shift+tab", "cycle_mode", "Cycle mode", priority=True),
-        Binding("ctrl+o", "toggle_tool_blocks", "Toggle tools", priority=True),
+        Binding("ctrl+c", "handle_ctrl_c", "退出", priority=True),
+        Binding("escape", "cancel", "取消", priority=True),
+        Binding("shift+tab", "cycle_mode", "切换权限模式", priority=True),
+        Binding("ctrl+o", "toggle_tool_blocks", "展开工具", priority=True),
     ]
 
 
@@ -661,7 +651,7 @@ class MewCodeApp(App):
     def _make_banner(model: str = "", work_dir: str = "") -> RichText:
         t = RichText()
         t.append(" /\\_/\\    ", style="bold color(99)")
-        t.append("MewCode v0.1.0\n", style="color(242)")
+        t.append("MewCode v0.2.1\n", style="color(242)")
         t.append("( o.o )   ", style="bold color(99)")
         t.append(f"{model}\n" if model else "\n", style="color(242)")
         t.append(" > ^ <    ", style="bold color(99)")
@@ -672,20 +662,24 @@ class MewCodeApp(App):
         yield Static(self._make_banner(), id="title-bar")
 
         if len(self.providers) > 1:
-            with Vertical(id="provider-select"):
-                yield Static("Select a Provider", id="select-label")
-                yield OptionList(
-                    *[
-                        Option(f"{p.name}  [{p.model}]", id=p.name)
-                        for p in self.providers
-                    ],
-                    id="provider-list",
-                )
+            with Middle(id="provider-select"):
+                with Center(id="provider-center"):
+                    with Vertical(id="provider-card"):
+                        yield Static("◆ 选择模型服务", id="select-label")
+                        yield Static("选择本次会话使用的模型", id="select-subtitle")
+                        yield OptionList(
+                            *[
+                                Option(f"{p.name}  [{p.model}]", id=p.name)
+                                for p in self.providers
+                            ],
+                            id="provider-list",
+                        )
+                        yield Static("↑/↓ 切换  ·  Enter 确认", id="select-hint")
         yield VerticalScroll(id="chat-area")
         with Vertical(id="input-area"):
             yield ChatInput(id="chat-input")
             with Horizontal(id="status-bar"):
-                yield Static("  default", id="mode-label")
+                yield Static("  默认", id="mode-label")
                 yield Static("", id="teammates-label")
                 yield Static("", id="model-label")
             yield CompletionPopup()
@@ -700,10 +694,13 @@ class MewCodeApp(App):
             self.query_one("#input-area").display = False
 
     def _select_provider(self, provider: ProviderConfig) -> None:
+        if self._selected_provider is not None:
+            return
         self._selected_provider = provider
         try:
             self.client = create_client(provider)
         except AuthenticationError as e:
+            self._selected_provider = None
             self._show_error(str(e))
             return
 
@@ -966,7 +963,7 @@ class MewCodeApp(App):
         self.query_one("#chat-area").display = True
         self.query_one("#input-area").display = True
         chat_input = self.query_one("#chat-input", ChatInput)
-        chat_input.placeholder = "Send a message..."
+        chat_input.placeholder = "输入消息..."
         chat_input.load_history(work_dir)
         chat_input.focus()
 
@@ -1299,7 +1296,7 @@ class MewCodeApp(App):
         self._refresh_skills_if_needed()
 
         if self._mcp_init_task and not self._mcp_init_task.done():
-            self._show_system_message("Waiting for MCP servers to connect...")
+            self._show_system_message("正在等待 MCP 服务连接...")
             await self._mcp_init_task
 
         self._streaming = True
@@ -1497,7 +1494,7 @@ class MewCodeApp(App):
                 elif isinstance(event, LoopComplete):
                     total_time = _time.monotonic() - self._thinking_start
                     done_label = Static(
-                        f"✻ {_to_past_tense(self._thinking_verb)} for {total_time:.1f}s",
+                        f"✻ 思考完成，用时 {total_time:.1f} 秒",
                         classes="message thinking-done",
                     )
                     await ai_row.mount(done_label)
@@ -1532,11 +1529,11 @@ class MewCodeApp(App):
                 if streaming_label is not None:
                     await streaming_label.remove()
                 md = Markdown(
-                    accumulated_text + "\n\n*[cancelled]*",
+                    accumulated_text + "\n\n*[已取消]*",
                     classes="message ai-message",
                 )
                 await ai_row.mount(md)
-            self._show_system_message("Operation cancelled")
+            self._show_system_message("操作已取消")
         except LLMError as e:
             self._show_error(str(e))
         finally:
@@ -1653,7 +1650,7 @@ class MewCodeApp(App):
             if feedback:
                 self.send_user_message(feedback)
             else:
-                self._show_system_message("Type your feedback and send.")
+                self._show_system_message("请输入修改意见后发送。")
 
     async def _handle_askuser(self, event: AskUserEvent) -> None:
         from mewcode.askuser_dialog import InlineAskUserWidget
@@ -1880,7 +1877,7 @@ class MewCodeApp(App):
         server_count = len(connect_result.servers)
         if server_count > 0:
             self._mcp_server_info = (
-                f"Connected to {server_count} MCP server(s), {mcp_tools} tools registered"
+                f"已连接 {server_count} 个 MCP 服务，注册了 {mcp_tools} 个工具"
             )
         if server_count > 0 and mcp_tools > 0:
             # 构建 MCP 指令：对齐 Go 版，从 InitializeResult 提取 instructions
@@ -1997,10 +1994,10 @@ class MewCodeApp(App):
         self.call_after_refresh(chat.scroll_end, animate=False)
 
     _MODE_DISPLAY = {
-        PermissionMode.DEFAULT: "default",
-        PermissionMode.ACCEPT_EDITS: "accept-edits",
-        PermissionMode.PLAN: "plan",
-        PermissionMode.BYPASS: "YOLO",
+        PermissionMode.DEFAULT: "默认",
+        PermissionMode.ACCEPT_EDITS: "自动接受编辑",
+        PermissionMode.PLAN: "计划",
+        PermissionMode.BYPASS: "全部放行",
     }
 
     def _update_mode_label(self) -> None:
@@ -2012,7 +2009,7 @@ class MewCodeApp(App):
             if perm == PermissionMode.DEFAULT:
                 label.update(f"[{color}]{display}[/{color}]")
             else:
-                label.update(f"[{color}]{display}[/{color}]  (shift+tab to cycle)")
+                label.update(f"[{color}]{display}[/{color}]  (Shift+Tab 切换)")
         try:
             model_label = self.query_one("#model-label", Static)
             model_text = self._selected_provider.model if self._selected_provider else ""

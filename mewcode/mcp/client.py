@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from contextlib import AsyncExitStack
 from typing import Any
 
@@ -13,6 +14,19 @@ from mcp.client.streamable_http import streamable_http_client
 from mewcode.config import MCPServerConfig, build_child_env, resolve_env_vars
 
 logger = logging.getLogger(__name__)
+WINDOWS = os.name == "nt"
+
+
+def resolve_stdio_command(command: str) -> str:
+    """Resolve Windows command shims before extensionless Unix scripts."""
+    if not WINDOWS:
+        return command
+    if os.path.splitext(command)[1]:
+        return shutil.which(command) or command
+    for extension in (".exe", ".cmd", ".bat", ".com"):
+        if resolved := shutil.which(command + extension):
+            return resolved
+    return shutil.which(command) or command
 
 
 class MCPClient:
@@ -69,7 +83,7 @@ class MCPClient:
         assert self.config.command is not None
 
         params = StdioServerParameters(
-            command=self.config.command,
+            command=resolve_stdio_command(self.config.command),
             args=self.config.args,
             env=build_child_env(self.config.env),
         )

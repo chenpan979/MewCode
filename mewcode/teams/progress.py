@@ -8,27 +8,9 @@ from typing import Optional
 
 
 SPINNER_VERBS = [
-    "Accomplishing", "Architecting", "Baking", "Beboppin'", "Befuddling",
-    "Bloviating", "Boogieing", "Boondoggling", "Bootstrapping", "Brewing",
-    "Calculating", "Canoodling", "Caramelizing", "Cascading", "Cerebrating",
-    "Choreographing", "Churning", "Coalescing", "Cogitating", "Combobulating",
-    "Composing", "Computing", "Concocting", "Considering", "Contemplating",
-    "Cooking", "Crafting", "Creating", "Crunching", "Crystallizing",
-    "Cultivating", "Deciphering", "Deliberating", "Dilly-dallying",
-    "Discombobulating", "Doodling", "Elucidating", "Enchanting", "Envisioning",
-    "Fermenting", "Finagling", "Flambéing", "Flibbertigibbeting", "Flummoxing",
-    "Forging", "Frolicking", "Gallivanting", "Garnishing", "Generating",
-    "Germinating", "Grooving", "Harmonizing", "Hatching", "Honking",
-    "Hullaballooing", "Ideating", "Imagining", "Improvising", "Incubating",
-    "Inferring", "Infusing", "Kneading", "Lollygagging", "Manifesting",
-    "Marinating", "Meandering", "Metamorphosing", "Mewing", "Moonwalking",
-    "Moseying", "Mulling", "Musing", "Noodling", "Orbiting", "Orchestrating",
-    "Percolating", "Philosophising", "Pondering", "Pontificating", "Pouncing",
-    "Purring", "Puzzling", "Razzle-dazzling", "Ruminating", "Scampering",
-    "Simmering", "Sketching", "Spelunking", "Spinning", "Sprouting",
-    "Synthesizing", "Thinking", "Tinkering", "Transfiguring", "Transmuting",
-    "Undulating", "Unfurling", "Unravelling", "Vibing", "Wandering",
-    "Whisking", "Working", "Wrangling", "Zigzagging",
+    "正在思考", "正在分析", "正在规划", "正在检查", "正在搜索",
+    "正在推理", "正在整理", "正在计算", "正在编写", "正在验证",
+    "正在调试", "正在重构", "正在探索", "正在综合", "正在处理",
 ]
 
 
@@ -50,18 +32,18 @@ class ToolActivity:
 def _describe(tool_name: str, args: dict) -> str:
     match tool_name:
         case "ReadFile":
-            return f"Reading {args.get('file_path', '')}"
+            return f"正在读取 {args.get('file_path', '')}"
         case "EditFile":
-            return f"Editing {args.get('file_path', '')}"
+            return f"正在编辑 {args.get('file_path', '')}"
         case "WriteFile":
-            return f"Writing {args.get('file_path', '')}"
+            return f"正在写入 {args.get('file_path', '')}"
         case "Bash":
             cmd = str(args.get("command", ""))
-            return f"Running {cmd[:40]}{'…' if len(cmd) > 40 else ''}"
+            return f"正在运行 {cmd[:40]}{'…' if len(cmd) > 40 else ''}"
         case "Glob":
-            return f"Searching {args.get('pattern', '')}"
+            return f"正在搜索 {args.get('pattern', '')}"
         case "Grep":
-            return f"Grepping {args.get('pattern', '')}"
+            return f"正在检索 {args.get('pattern', '')}"
         case _:
             return tool_name
 

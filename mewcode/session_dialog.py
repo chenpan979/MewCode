@@ -24,22 +24,22 @@ def _relative_time(meta: SessionMeta) -> str:
     delta = now - dt
     secs = int(delta.total_seconds())
     if secs < 60:
-        return "just now"
+        return "刚刚"
     if secs < 3600:
-        return f"{secs // 60} min ago"
+        return f"{secs // 60} 分钟前"
     if secs < 86400:
-        return f"{secs // 3600} hours ago"
-    return f"{secs // 86400} days ago"
+        return f"{secs // 3600} 小时前"
+    return f"{secs // 86400} 天前"
 
 
 class InlineResumeWidget(Vertical, can_focus=True):
     """内联的会话恢复视图，格式与 Go 版 TUI 保持一致。"""
 
     BINDINGS = [
-        Binding("up", "cursor_up", "Up", priority=True),
-        Binding("down", "cursor_down", "Down", priority=True),
-        Binding("enter", "select", "Select", priority=True),
-        Binding("escape", "cancel", "Cancel", priority=True),
+        Binding("up", "cursor_up", "上移", priority=True),
+        Binding("down", "cursor_down", "下移", priority=True),
+        Binding("enter", "select", "选择", priority=True),
+        Binding("escape", "cancel", "取消", priority=True),
     ]
 
     class Selected(Message):
@@ -66,7 +66,7 @@ class InlineResumeWidget(Vertical, can_focus=True):
         lines = []
         total = len(self._sessions)
         showing = len(self._filtered)
-        lines.append(f"[dim]Resume session ({showing} of {total})[/]\n")
+        lines.append(f"[dim]恢复会话（显示 {showing}/{total}）[/]\n")
 
         if self._search:
             lines.append(f"┌{'─' * 30}┐")
@@ -74,14 +74,14 @@ class InlineResumeWidget(Vertical, can_focus=True):
             lines.append(f"└{'─' * 30}┘")
         else:
             lines.append(f"┌{'─' * 30}┐")
-            lines.append(f"│[dim]⌕ Search…{'':>20}[/]│")
+            lines.append(f"│[dim]⌕ 搜索…{'':>20}[/]│")
             lines.append(f"└{'─' * 30}┘")
 
         if self._project:
             lines.append(f"\n  [dim]{self._project}[/]\n")
 
         for i, meta in enumerate(self._filtered[:10]):  # 最多显示 10 条
-            title = meta.title or "(empty session)"
+            title = meta.title or "（空会话）"
             if i == self._cursor:
                 lines.append(f"[bold cyan]❯[/] [bold]{title}[/]")
             else:
@@ -96,9 +96,9 @@ class InlineResumeWidget(Vertical, can_focus=True):
             lines.append("")
 
         if showing > 10:
-            lines.append(f"  [dim]↓ {showing - 10} more session(s)[/]")
+            lines.append(f"  [dim]↓ 还有 {showing - 10} 个会话[/]")
 
-        lines.append("[dim]Type to search · Enter to select · Esc to cancel[/]")
+        lines.append("[dim]输入文字搜索 · Enter 选择 · Esc 取消[/]")
         return "\n".join(lines)
 
     def _refresh(self) -> None:

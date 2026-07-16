@@ -195,17 +195,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <body>
 <div id="app">
   <div id="status-bar">
-    <span class="brand">⚡ MewCode Remote</span>
+    <span class="brand">⚡ MewCode 远程界面</span>
     <div class="info">
-      <span id="conn-status"><span class="dot disconnected"></span>Connecting...</span>
+      <span id="conn-status"><span class="dot disconnected"></span>正在连接...</span>
       <span id="token-info"></span>
     </div>
   </div>
   <div id="messages"></div>
   <div id="input-area" style="position:relative;">
     <div id="slash-menu"></div>
-    <textarea id="input" placeholder="Send a message... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
-    <button id="send-btn">Send</button>
+    <textarea id="input" placeholder="输入消息...（Enter 发送，Shift+Enter 换行）" rows="1"></textarea>
+    <button id="send-btn">发送</button>
   </div>
 </div>
 
@@ -256,7 +256,7 @@ function connect() {
   ws = new WebSocket(proto + '//' + location.host + wsPath);
 
   ws.onopen = () => {
-    connStatus.innerHTML = '<span class="dot connected"></span>Connected';
+    connStatus.innerHTML = '<span class="dot connected"></span>已连接';
     // 每 10 秒发一次应用层 ping，防止连接被中间件/浏览器回收
     pingTimer = setInterval(() => {
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -266,7 +266,7 @@ function connect() {
   };
 
   ws.onclose = () => {
-    connStatus.innerHTML = '<span class="dot disconnected"></span>Reconnecting...';
+    connStatus.innerHTML = '<span class="dot disconnected"></span>正在重新连接...';
     if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
     setTimeout(connect, 3000);
   };
@@ -298,7 +298,7 @@ function handleMessage(msg) {
 
     case 'clear':
       messagesEl.innerHTML = '';
-      addSystem('Conversation cleared.');
+      addSystem('会话已清空。');
       break;
 
     case 'command_done':
@@ -318,7 +318,7 @@ function handleMessage(msg) {
 
     case 'stream_text':
       if (currentThinkingEl) {
-        currentThinkingEl.querySelector('.thinking-header span:last-child').textContent = '💭 Thought';
+        currentThinkingEl.querySelector('.thinking-header span:last-child').textContent = '💭 思考过程';
         currentThinkingEl = null;
         currentThinkingText = '';
       }
@@ -349,7 +349,7 @@ function handleMessage(msg) {
 
     case 'tool_use':
       if (currentThinkingEl) {
-        currentThinkingEl.querySelector('.thinking-header span:last-child').textContent = '💭 Thought';
+        currentThinkingEl.querySelector('.thinking-header span:last-child').textContent = '💭 思考过程';
         currentThinkingEl = null;
         currentThinkingText = '';
       }
@@ -389,7 +389,7 @@ function handleMessage(msg) {
       break;
 
     case 'usage':
-      tokenInfo.textContent = 'In: ' + formatTokens(msg.data.inputTokens) + ' | Out: ' + formatTokens(msg.data.outputTokens);
+      tokenInfo.textContent = '输入: ' + formatTokens(msg.data.inputTokens) + ' | 输出: ' + formatTokens(msg.data.outputTokens);
       break;
 
     case 'error':
@@ -443,7 +443,7 @@ function updateAssistant(el, text, isStreaming) {
       html += '<div class="thinking-block">' +
         '<div class="thinking-header" onclick="toggleThinking(this)">' +
           '<span class="icon">▶</span>' +
-          '<span>💭 Thought</span>' +
+          '<span>💭 思考过程</span>' +
         '</div>' +
         '<div class="thinking-body">' + escapeHtml(thinkText) + '</div>' +
       '</div>';
@@ -459,7 +459,7 @@ function updateAssistant(el, text, isStreaming) {
     let html = '<div class="thinking-block">' +
       '<div class="thinking-header" onclick="toggleThinking(this)">' +
         '<span class="icon">▶</span>' +
-        '<span>💭 Thinking...</span>' +
+        '<span>💭 思考中...</span>' +
       '</div>' +
       '<div class="thinking-body">' + escapeHtml(thinkBody) + '</div>' +
     '</div>';
@@ -479,7 +479,7 @@ function addThinking() {
   div.innerHTML =
     '<div class="thinking-header" onclick="toggleThinking(this)">' +
       '<span class="icon">▶</span>' +
-      '<span>💭 Thinking...</span>' +
+      '<span>💭 思考中...</span>' +
     '</div>' +
     '<div class="thinking-body"></div>';
   messagesEl.appendChild(div);
@@ -590,12 +590,12 @@ function addPermissionDialog(data) {
   div.className = 'perm-dialog';
   div.id = 'perm-' + data.id;
   div.innerHTML =
-    '<div class="title">🔒 Permission Required: ' + escapeHtml(data.toolName) + '</div>' +
+    '<div class="title">🔒 需要授权：' + escapeHtml(data.toolName) + '</div>' +
     '<div class="desc">' + escapeHtml(data.description) + '</div>' +
     '<div class="actions">' +
-      '<button class="btn-allow" onclick="respondPerm(\'' + data.id + '\', \'allow\')">Allow</button>' +
-      '<button class="btn-always" onclick="respondPerm(\'' + data.id + '\', \'allowAlways\')">Allow Always</button>' +
-      '<button class="btn-deny" onclick="respondPerm(\'' + data.id + '\', \'deny\')">Deny</button>' +
+      '<button class="btn-allow" onclick="respondPerm(\'' + data.id + '\', \'allow\')">允许</button>' +
+      '<button class="btn-always" onclick="respondPerm(\'' + data.id + '\', \'allowAlways\')">始终允许</button>' +
+      '<button class="btn-deny" onclick="respondPerm(\'' + data.id + '\', \'deny\')">拒绝</button>' +
     '</div>';
   messagesEl.appendChild(div);
   scrollToBottom();
@@ -605,7 +605,7 @@ function respondPerm(id, response) {
   ws.send(JSON.stringify({ type: 'permission_response', data: { id, response } }));
   const el = document.getElementById('perm-' + id);
   if (el) {
-    el.innerHTML = '<div style="color:var(--text-dim)">🔒 Permission: ' + response + '</div>';
+    el.innerHTML = '<div style="color:var(--text-dim)">🔒 授权结果：' + response + '</div>';
   }
 }
 

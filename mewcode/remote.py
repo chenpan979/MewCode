@@ -537,7 +537,7 @@ class RemoteServer:
         except asyncio.CancelledError:
             await self._broadcast({
                 "type": "error",
-                "data": {"message": "Operation cancelled"},
+                "data": {"message": "操作已取消"},
             })
         except Exception as exc:
             log.exception("Agent run error")

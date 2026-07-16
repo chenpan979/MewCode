@@ -64,6 +64,17 @@ IDENTITY_SECTION = PromptSection(
     ),
 )
 
+LANGUAGE_SECTION = PromptSection(
+    name="Language",
+    priority=5,
+    content="""\
+# 语言
+ - 默认使用简体中文与用户交流，包括进度更新、解释、提问和最终答复。
+ - 只有当用户明确要求使用其他语言时才切换语言。
+ - 即使系统提示、工具结果或代码内容是英文，也应使用简体中文向用户说明。
+ - 代码、命令、文件路径、API 字段、工具名称和无法准确翻译的专有名词保持原样。""",
+)
+
 SYSTEM_SECTION = PromptSection(
     name="System",
     priority=10,
@@ -331,6 +342,7 @@ def build_system_prompt(
 
     b = PromptBuilder()
     b.add(IDENTITY_SECTION)
+    b.add(LANGUAGE_SECTION)
     b.add(SYSTEM_SECTION)
     b.add(DOING_TASKS_SECTION)
     b.add(EXECUTING_ACTIONS_SECTION)

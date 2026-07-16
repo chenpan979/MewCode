@@ -15,13 +15,13 @@ class InlineAskUserWidget(Vertical, can_focus=True):
     """
 
     BINDINGS = [
-        Binding("up", "cursor_up", "Up", priority=True),
-        Binding("down", "cursor_down", "Down", priority=True),
-        Binding("enter", "select", "Select", priority=True),
-        Binding("tab", "next_q", "Next", priority=True),
-        Binding("shift+tab", "prev_q", "Prev", priority=True),
-        Binding("space", "toggle", "Toggle", priority=True),
-        Binding("escape", "cancel", "Cancel", priority=True),
+        Binding("up", "cursor_up", "上移", priority=True),
+        Binding("down", "cursor_down", "下移", priority=True),
+        Binding("enter", "select", "选择", priority=True),
+        Binding("tab", "next_q", "下一题", priority=True),
+        Binding("shift+tab", "prev_q", "上一题", priority=True),
+        Binding("space", "toggle", "切换", priority=True),
+        Binding("escape", "cancel", "取消", priority=True),
     ]
 
     class Responded(Message):
@@ -67,7 +67,7 @@ class InlineAskUserWidget(Vertical, can_focus=True):
             lines.append("")
 
         q = self._questions[self._q_idx]
-        header = q.get("question", q.get("message", f"Question {self._q_idx + 1}"))
+        header = q.get("question", q.get("message", f"问题 {self._q_idx + 1}"))
         lines.append(f" [bold color(99)]{header}[/]\n")
 
         options = q.get("options", [])
@@ -95,17 +95,17 @@ class InlineAskUserWidget(Vertical, can_focus=True):
         prefix = " ❯ " if cursor == other_idx else "   "
         bold = "[bold]" if cursor == other_idx else ""
         end_bold = "[/]" if cursor == other_idx else ""
-        lines.append(f"{prefix}{bold}Other{end_bold}")
+        lines.append(f"{prefix}{bold}其他{end_bold}")
 
         if cursor == other_idx:
             text = self._others[self._q_idx]
-            display = text if text else "[dim]Type your answer here...[/]"
+            display = text if text else "[dim]在此输入你的回答...[/]"
             lines.append(f"      {display}█")
 
         if is_multi:
-            lines.append("\n      [dim]space to toggle, enter to confirm[/]")
+            lines.append("\n      [dim]空格切换，Enter 确认[/]")
         else:
-            lines.append("\n      [dim]enter to confirm[/]")
+            lines.append("\n      [dim]Enter 确认[/]")
 
         return "\n".join(lines)
 
@@ -118,23 +118,23 @@ class InlineAskUserWidget(Vertical, can_focus=True):
                 parts.append(f"[bold reverse] {header} {check} [/]")
             else:
                 parts.append(f" {header} {check} ")
-        submit_part = "[bold reverse] ✓ Submit [/]" if self._on_submit else " ✓ Submit "
+        submit_part = "[bold reverse] ✓ 提交 [/]" if self._on_submit else " ✓ 提交 "
         parts.append(submit_part)
         left = "[bold]←[/]" if self._q_idx > 0 else "[dim]←[/]"
         right = "[bold]→[/]"
         return f" {left} {'|'.join(parts)} {right}"
 
     def _render_submit(self) -> str:
-        lines = ["\n [bold color(99)]Review your answers:[/]\n"]
+        lines = ["\n [bold color(99)]检查你的回答：[/]\n"]
         for i, q in enumerate(self._questions):
             header = q.get("header", q.get("question", f"Q{i+1}"))
             ans = self._answered.get(i, "")
             if ans:
                 lines.append(f"   {header}: {ans}")
             else:
-                lines.append(f"   {header}: [dim](not answered)[/]")
+                lines.append(f"   {header}: [dim]（未回答）[/]")
         lines.append("")
-        for j, label in enumerate(["Submit answers", "Cancel"]):
+        for j, label in enumerate(["提交回答", "取消"]):
             if j == self._submit_idx:
                 lines.append(f" [bold cyan]❯[/] [bold]{label}[/]")
             else:
@@ -151,7 +151,7 @@ class InlineAskUserWidget(Vertical, can_focus=True):
         is_multi = q.get("multiSelect", False)
 
         if cursor == len(options):  # "Other"（自定义输入）
-            self._answered[self._q_idx] = self._others[self._q_idx] or "Other"
+            self._answered[self._q_idx] = self._others[self._q_idx] or "其他"
         elif is_multi:
             selected = [
                 (opt.get("label", str(opt)) if isinstance(opt, dict) else str(opt))

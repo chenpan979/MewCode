@@ -296,3 +296,16 @@ class TestMCPManagerPartialFailure:
         assert len(result.errors) == 1
         assert "bad" in result.errors[0]
         assert registry.get("mcp_good_test_tool") is not None
+
+
+def test_resolve_stdio_command_prefers_windows_cmd(monkeypatch):
+    from mewcode.mcp import client
+
+    monkeypatch.setattr(client, "WINDOWS", True)
+    monkeypatch.setattr(
+        client.shutil,
+        "which",
+        lambda command: r"C:\npm\npx.cmd" if command == "npx.cmd" else None,
+    )
+
+    assert client.resolve_stdio_command("npx") == r"C:\npm\npx.cmd"

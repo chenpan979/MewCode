@@ -33,7 +33,7 @@ async def _handle_rewind(ctx) -> None:
     try:
         idx = int(parts[0]) - 1
     except (ValueError, IndexError):
-        ctx.ui.add_system_message("Invalid checkpoint number.")
+        ctx.ui.add_system_message("无效的检查点编号。")
         return
 
     if idx < 0 or idx >= len(snapshots):

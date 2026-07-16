@@ -33,7 +33,7 @@ class ProviderConfig:
     protocol: str
     base_url: str
     model: str
-    api_key: str = ""
+    api_key: str = field(default="", repr=False)
     thinking: bool = False
     # 0 表示"未设置" — get_context_window() 通过四层 fallback 解析真实窗口大小。
     # 正数表示配置文件里显式指定的覆盖值。

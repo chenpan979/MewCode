@@ -10,24 +10,66 @@ Screen { }
 /* --- Provider Selection --- */
 
 #provider-select {
-    align: center middle;
     width: 100%;
     height: 1fr;
+    padding: 1 2;
+}
+
+#provider-center {
+    width: 100%;
+    height: auto;
+}
+
+#provider-card {
+    width: 64;
+    min-width: 36;
+    max-width: 90%;
+    height: auto;
+    padding: 1 2;
+    background: #171717;
+    border: round #875fff;
 }
 
 #select-label {
-    text-align: center;
     width: 100%;
-    height: auto;
-    margin-top: 2;
+    height: 1;
+    text-align: center;
     text-style: bold;
+    color: #d8d0ff;
+}
+
+#select-subtitle {
+    width: 100%;
+    height: 1;
+    margin-top: 1;
+    text-align: center;
+    color: #8a8a8a;
 }
 
 #provider-list {
-    width: 60;
+    width: 100%;
     height: auto;
     max-height: 16;
-    margin: 1 2;
+    margin: 1 0;
+    border: none;
+    background: transparent;
+}
+
+#provider-list > .option-list--option-highlighted {
+    background: #3d2b63;
+    color: #ffffff;
+    text-style: bold;
+}
+
+#provider-list:focus > .option-list--option-highlighted {
+    background: #5f3dc4;
+}
+
+#select-hint {
+    width: 100%;
+    height: 1;
+    text-align: center;
+    color: #777777;
 }
 
 /* --- Chat Area --- */
